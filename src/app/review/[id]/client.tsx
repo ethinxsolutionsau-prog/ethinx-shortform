@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Payments from "@/components/Payments";
 
 export default function ReviewClient({ job }: { job: any }) {
   const [msg, setMsg] = useState("");
@@ -133,6 +134,8 @@ export default function ReviewClient({ job }: { job: any }) {
         </div>
       )}
       {job.state === "ESCALATED" && <div className="text-xs text-red-700 bg-red-50 border p-3">ESCALATED: repair limit reached (2) → cannot be delivered. Requires human revision.</div>}
+
+      <Payments jobId={job.id} />
     </div>
   );
 }

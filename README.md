@@ -1,5 +1,7 @@
 # EthinX Short-Form — Controlled Production Line
 
+> ⚠️ **Security: Never commit `.env`** — `.env` is gitignored (`# .env` in `.gitignore`). Put real keys only in server env (Vercel / Render / Docker secrets) or local `.env` not in git. Use `.env.example` with **placeholder** keys only. **Rotate all old keys now** — DeepSeek, ElevenLabs, OpenAI, Google — because previous `.env.example` with real keys was public (commit `f05f057`). Previous commit was bypassed via push-protection; keys are compromised. Revoke at: DeepSeek platform, ElevenLabs settings, OpenAI dashboard, Google Cloud Console, then update server `.env`.
+
 Business URL IN → Reviewed 4×15s video package OUT. Exactly four 15-second videos: **1. Problem 2. Proof 3. Offer 4. Direct-Response**. Offer: one video **$199** or four for **$550**, no subscription. Isolated from long-form FacelessForge but reuses QA logic.
 
 ## Architecture

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Payments from "@/components/Payments";
 
 export default function NewCampaign() {
   const router = useRouter();
@@ -97,6 +98,9 @@ export default function NewCampaign() {
         </button>
       </form>
       <div className="text-xs text-zinc-400 mt-4">Next: Collector scans website + socials → Brief Builder → /brief/[jobId] for correction</div>
+      <div className="mt-6">
+        <Payments compact />
+      </div>
     </div>
   );
 }
