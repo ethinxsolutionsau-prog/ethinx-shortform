@@ -10,7 +10,8 @@
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
-    "seed": "tsx src/lib/seed.ts"
+    "seed": "tsx src/lib/seed.ts",
+    "check:secrets": "npx tsx scripts/check-secrets.ts"
   },
   "dependencies": {
     "@dodopayments/opencode-plugin": "^0.5.1",
