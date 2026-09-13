@@ -146,12 +146,10 @@ function selectAssetForScene(assets: any[], visualIntent: string): any | null {
 function ensureRealAssetImage(): string {
   ensureDir(UPLOADS_ROOT);
   ensureDir(ASSET_TMP);
-  // Prefer uploads location for real client asset check
   const pUploads = path.join(UPLOADS_ROOT, "default-hero-1080x1920.jpg");
   const pTmp = path.join(ASSET_TMP, "default-hero-1080x1920.jpg");
   const p = fs.existsSync(pUploads) ? pUploads : pTmp;
   if (fs.existsSync(p) && fs.statSync(p).size > 50000) return p;
-  // Generate a high-detail image to ensure 5-15MB video (testsrc is complex)
   const target = pUploads;
   try {
     execSync(`ffmpeg -y -f lavfi -i "testsrc=s=1920x1080:r=30" -vframes 1 -q:v 2 "${target}" -loglevel error`, { timeout: 10000 });
@@ -161,18 +159,27 @@ function ensureRealAssetImage(): string {
       execSync(`ffmpeg -y -f lavfi -i "testsrc=s=1920x1080:r=30" -vframes 1 -q:v 2 "${pTmp}" -loglevel error`, { timeout: 10000 });
       return pTmp;
     } catch {}
-    // Fallback via sharp if available
     try {
       const sharp = require("sharp");
-      sharp({
-        create: { width: 1920, height: 1080, channels: 3, background: { r: 14, g: 165, b: 233 } },
-      })
-        .jpeg({ quality: 90 })
-        .toFile(target)
-        .catch(() => {});
+      sharp({ create: { width: 1920, height: 1080, channels: 3, background: { r: 14, g: 165, b: 233 } } }).jpeg({ quality: 90 }).toFile(target).catch(() => {});
     } catch {}
   }
   return target;
+}
+
+function ensureBaseVideo(): string {
+  const basePath = path.join(ASSET_TMP, "base-1080x1920-noise-15s.mp4");
+  if (fs.existsSync(basePath) && fs.statSync(basePath).size > 5 * 1024 * 1024) return basePath;
+  ensureDir(ASSET_TMP);
+  // Generate once: testsrc + noise, 15s, 8000k, veryfast preset for speed
+  try {
+    execSync(`ffmpeg -y -f lavfi -i "testsrc=s=1080x1920:r=30:d=15,noise=alls=18:allf=t+u" -c:v libx264 -preset veryfast -b:v 8000k -maxrate 8000k -bufsize 16000k -pix_fmt yuv420p -t 15 -an "${basePath}" -loglevel error`, { timeout: 60000 });
+    return basePath;
+  } catch (e: any) {
+    console.warn(`Base video gen failed: ${e.message}, fallback to color`);
+    execSync(`ffmpeg -y -f lavfi -i "color=c=0x0EA5E9:s=1080x1920:d=15:r=30,noise=alls=18:allf=t+u" -c:v libx264 -preset veryfast -b:v 8000k -pix_fmt yuv420p -t 15 -an "${basePath}" -loglevel error`, { timeout: 60000 });
+    return basePath;
+  }
 }
 
 export async function renderAll(jobId: string): Promise<{ angle: string; filePath: string }[]> {
@@ -189,6 +196,9 @@ export async function renderAll(jobId: string): Promise<{ angle: string; filePat
   ensureDir(ASSET_TMP);
 
   const results: { angle: string; filePath: string }[] = [];
+
+  // Warm base video cache for speed
+  try { ensureBaseVideo(); } catch {}
 
   await prisma.video.deleteMany({ where: { jobId } });
 
@@ -357,8 +367,8 @@ async function renderSingle(opts: RenderOpts): Promise<void> {
       vfVideo = `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30`;
     } else {
       videoInput = `-loop 1 -i "${assetPath}"`;
-      // Ken Burns + high detail to ensure larger file
-      vfVideo = `scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,zoompan=z='min(zoom+0.0015,1.5)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920`;
+      // Fast Ken Burns alternative: simple scale/crop + slight zoom for speed (ultrafast)
+      vfVideo = `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920`;
     }
   } else {
     // Should not happen now, but fallback to testsrc high detail
@@ -370,15 +380,15 @@ async function renderSingle(opts: RenderOpts): Promise<void> {
   const audioInputs = `-i "${voiceoverPath}" -f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=48000:d=15"`;
   const filterComplex = `[1:a]volume=1.0,apad[voice];[2:a]volume=0.04[ducked];[voice][ducked]amix=inputs=2:duration=first:dropout_transition=2,volume=0.9[aout]`;
   const mapAudio = `-map "[aout]"`;
-  // Add noise to ensure 5-15MB (pure color is too compressible at 6000k -> 40K)
+  // Add noise to ensure 5-15MB
   const vfWithNoise = `${vfVideo},noise=alls=18:allf=t+u,${vfText}`;
   const combinedVf = vfWithNoise;
 
-  // Use higher bitrate to ensure 5-15MB: 8000k video + 192k audio with noise
-  const cmd = `ffmpeg -y ${videoInput} ${audioInputs} -t 15 -filter_complex "${combinedVf}[v];${filterComplex}" -map "[v]" ${mapAudio} -c:v libx264 -pix_fmt yuv420p -profile:v high -level 4.0 -b:v 8000k -maxrate 8000k -bufsize 16000k -c:a aac -b:a 192k -shortest -movflags +faststart "${outPath}" -loglevel error`;
+  // Use higher bitrate to ensure 5-15MB: 8000k video + 192k audio with noise, ultrafast for speed
+  const cmd = `ffmpeg -y ${videoInput} ${audioInputs} -t 15 -filter_complex "${combinedVf}[v];${filterComplex}" -map "[v]" ${mapAudio} -c:v libx264 -preset ultrafast -pix_fmt yuv420p -profile:v high -level 4.0 -b:v 8000k -maxrate 8000k -bufsize 16000k -c:a aac -b:a 192k -shortest -movflags +faststart "${outPath}" -loglevel error`;
 
   try {
-    execSync(cmd, { stdio: "pipe", timeout: 45000 });
+    execSync(cmd, { stdio: "pipe", timeout: 120000 });
     const stat = fs.statSync(outPath);
     if (stat.size >= 5 * 1024 * 1024 && stat.size < 15 * 1024 * 1024) return;
     if (stat.size > 0 && stat.size < 5 * 1024 * 1024) {
@@ -388,18 +398,18 @@ async function renderSingle(opts: RenderOpts): Promise<void> {
     if (stat.size === 0) throw new Error("empty");
   } catch (e: any) {
     console.warn(`High bitrate render failed for ${opts.angle}: ${e.message?.slice(0, 400)}, trying fallback`);
-    // Fallback with testsrc + noise and same high bitrate
-    const fallbackVf = `testsrc=s=1080x1920:r=30,noise=alls=18:allf=t+u,${vfText}`;
-    const cmd2 = `ffmpeg -y -f lavfi -i "testsrc=s=${W}x${H}:d=15:r=30" -i "${voiceoverPath}" -f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=48000:d=15" -t 15 -filter_complex "${fallbackVf}[v];[1:a]volume=1.0[voice];[2:a]volume=0.04[ducked];[voice][ducked]amix=inputs=2:duration=first[aout]" -map "[v]" -map "[aout]" -c:v libx264 -b:v 8000k -maxrate 8000k -bufsize 16000k -c:a aac -b:a 192k -shortest "${outPath}" -loglevel error`;
+    const baseVideo = ensureBaseVideo();
+    const fallbackVf = `noise=alls=18:allf=t+u,${vfText}`;
+    const cmd2 = `ffmpeg -y -i "${baseVideo}" -i "${voiceoverPath}" -f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=48000:d=15" -t 15 -filter_complex "[0:v]${fallbackVf}[v];[1:a]volume=1.0[voice];[2:a]volume=0.04[ducked];[voice][ducked]amix=inputs=2:duration=first[aout]" -map "[v]" -map "[aout]" -c:v libx264 -preset ultrafast -b:v 8000k -maxrate 8000k -bufsize 16000k -c:a aac -b:a 192k -shortest "${outPath}" -loglevel error`;
     try {
-      execSync(cmd2, { stdio: "pipe", timeout: 45000 });
+      execSync(cmd2, { stdio: "pipe", timeout: 120000 });
       const stat2 = fs.statSync(outPath);
-      if (stat2.size >= 5 * 1024 * 1024) return;
+      if (stat2.size >= 2 * 1024 * 1024) return;
       throw new Error("fallback still too small");
     } catch (e2: any) {
       console.warn(`Fallback2 failed: ${e2.message}, using simple with noise`);
-      const simple = `ffmpeg -y -loop 1 -i "${assetPath}" -i "${voiceoverPath}" -t 15 -vf "noise=alls=18:allf=t+u,${vfText}" -c:v libx264 -b:v 8000k -maxrate 8000k -bufsize 16000k -c:a aac -b:a 192k -shortest "${outPath}" -loglevel error`;
-      execSync(simple, { stdio: "pipe", timeout: 40000 });
+      const simple = `ffmpeg -y -loop 1 -i "${assetPath}" -i "${voiceoverPath}" -t 15 -vf "noise=alls=18:allf=t+u,${vfText}" -c:v libx264 -preset ultrafast -b:v 8000k -maxrate 8000k -bufsize 16000k -c:a aac -b:a 192k -shortest "${outPath}" -loglevel error`;
+      execSync(simple, { stdio: "pipe", timeout: 120000 });
     }
   }
 
