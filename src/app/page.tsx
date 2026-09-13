@@ -20,9 +20,14 @@ export default async function Home() {
               Turn a business link into 4 short videos. 15 seconds each. Reviewed and ready to post.
             </p>
           </div>
-          <Link href="/new" className="inline-flex items-center justify-center bg-black text-white px-6 py-3 rounded-xl font-semibold hover:bg-zinc-800 transition text-sm whitespace-nowrap">
-            + New Campaign
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/demo" className="inline-flex items-center justify-center bg-white border border-zinc-200 text-zinc-900 px-6 py-3 rounded-xl font-semibold hover:bg-zinc-50 transition text-sm whitespace-nowrap">
+              View Demo
+            </Link>
+            <Link href="/new" className="inline-flex items-center justify-center bg-black text-white px-6 py-3 rounded-xl font-semibold hover:bg-zinc-800 transition text-sm whitespace-nowrap">
+              + New Campaign
+            </Link>
+          </div>
         </div>
 
         {/* Stats */}
