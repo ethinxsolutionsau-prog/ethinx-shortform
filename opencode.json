@@ -1,0 +1,8 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@dodopayments/opencode-plugin"],
+  "model": "opencode/nemotron-3-ultra-free",
+  "skills": {
+    "paths": ["node_modules/@dodopayments/opencode-plugin/skills"]
+  }
+}

@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobState {
+  INTAKE
+  COLLECTING
+  BRIEF_REVIEW
+  SCRIPTING
+  STORYBOARDING
+  RENDERING
+  QUALITY_REVIEW
+  REPAIRING
+  HUMAN_REVIEW
+  APPROVED
+  DELIVERED
+  ESCALATED
+  REVISION
+  FAILED
+}
+
+enum VideoAngle {
+  PROBLEM
+  PROOF
+  OFFER
+  DIRECT
+}
+
+model Job {
+  id                        String   @id @default(cuid())
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  // Intake fields
+  businessUrl               String
+  campaignGoal              String   @default("quote_requests")
+  targetLocation            String
+  targetCustomer            String
+  primaryService            String
+  offer                     String
+  outputFormats             String[] @default(["9:16"])
+  assetPermissionConfirmed  Boolean  @default(false)
+
+  // Optional intake
+  instagramUrl              String?
+  facebookUrl               String?
+  phone                     String?
+  landingUrl                String?
+  brandRestrictions         String?
+  voicePreference           String?
+  musicPreference           String?
+
+  // State
+  state                     JobState @default(INTAKE)
+  releaseEligible           Boolean  @default(false)
+  repairCount               Int      @default(0)
+  maxRepairs                Int      @default(2)
+
+  // Collector / Brief
+  brandData                 Json?
+  brief                     Json?
+  briefApprovedAt           DateTime?
+
+  // Relations
+  assets                    Asset[]
+  scripts                   Script[]
+  videos                    Video[]
+  qaResults                 QaResult[]
+  auditLogs                 AuditLog[]
+
+  // Approval
+  approvedAt                DateTime?
+  approvedBy                String?
+  humanDecision             String?
+}
+
+model Asset {
+  id              String   @id @default(cuid())
+  jobId           String
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+
+  assetId         String   // external id
+  sourceUrl       String
+  type            String   // image, video, logo
+  usage           String   @default("private_mockup_only") // until confirmed
+  dimensions      Json?
+  qualityScore    Float?   @default(0)
+  confidenceScore Float?   @default(0)
+  provenance      Json?    // {source_url, captured_at, verified}
+  manifest        Json?    // full manifest
+  localPath       String?
+}
+
+model Script {
+  id              String     @id @default(cuid())
+  jobId           String
+  job             Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  angle           VideoAngle
+  durationSeconds Int        @default(15)
+  voiceover       String
+  scenes          Json       // [{start,end,visual_intent,caption}]
+  cta             String
+  claimsUsed      Json?      // []
+  rawJson         Json?
+  validated       Boolean    @default(false)
+  validationErrors Json?
+  createdAt       DateTime   @default(now())
+}
+
+model Video {
+  id              String     @id @default(cuid())
+  jobId           String
+  job             Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  angle           VideoAngle
+  templateId      String     @default("transformation_v1")
+  status          String     @default("pending") // pending, rendering, rendered, failed, qa_passed, qa_failed
+  filePath        String?
+  thumbnailPath   String?
+  duration        Float?
+  width           Int?
+  height          Int?
+  checksum        String?
+  renderSettings  Json?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model QaResult {
+  id              String   @id @default(cuid())
+  jobId           String
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  videoId         String?
+  checks          Json     // deterministic checks results
+  visual          Json?    // Vertex AI results mock
+  transcript      Json?    // Whisper results
+  passed          Boolean  @default(false)
+  repairNeeded    Boolean  @default(false)
+  repairActions   Json?
+  createdAt       DateTime @default(now())
+}
+
+model AuditLog {
+  id              String   @id @default(cuid())
+  jobId           String
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  action          String
+  actor           String   @default("system")
+  fromState       String?
+  toState         String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+}
+
+model Template {
+  id              String   @id @default(cuid())
+  templateId      String   @unique // e.g., transformation_v1
+  name            String
+  aspectRatio     String   @default("9:16")
+  duration        Int      @default(15)
+  captionSafeWidth Int     @default(820)
+  captionMaxLines Int      @default(2)
+  logoZone        String   @default("top_right")
+  ctaStart        Int      @default(12)
+  scenes          Int      @default(5)
+  config          Json     // full template definition
+  createdAt       DateTime @default(now())
+}
