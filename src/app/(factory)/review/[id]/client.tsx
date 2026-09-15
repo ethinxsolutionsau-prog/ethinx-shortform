@@ -148,7 +148,7 @@ export default function ReviewClient({ job }: { job: any }) {
       {/* Paywall */}
       <div>
         <h3 className="font-semibold mb-3">Pay to unlock delivery</h3>
-        <Payments jobId={job.id} />
+        <Payments jobId={job.id} pack={job.pack} />
         <p className="text-xs text-zinc-500 mt-2">You paid? Still need human approval. Delivery stays locked until approved.</p>
       </div>
 

@@ -1,0 +1,158 @@
+.market {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+  color-scheme: dark;
+}
+
+.market :global(.skip-link) { position:fixed; left:1rem; top:-5rem; z-index:100; padding:.75rem 1rem; background:var(--gold); color:#080808; font-weight:800; }
+.market :global(.skip-link:focus) { top:1rem; }
+.market :global(.site-header) { position:sticky; top:0; z-index:30; display:flex; align-items:center; justify-content:space-between; min-height:76px; padding:0 max(24px,calc((100vw - 1180px)/2)); background:rgba(8,8,8,.9); border-bottom:1px solid var(--line); backdrop-filter:blur(16px); }
+.market :global(.brand) { display:flex; flex-direction:column; width:max-content; line-height:1; letter-spacing:.12em; }
+.market :global(.brand span) { font-size:1.15rem; font-weight:900; color:var(--gold-light); }
+.market :global(.brand small) { margin-top:.32rem; font-size:.54rem; font-weight:700; color:var(--muted); letter-spacing:.28em; }
+.market :global(.site-header nav) { display:flex; align-items:center; gap:1.6rem; font-size:.86rem; color:#d6d2c8; }
+.market :global(.site-header nav a:hover), .market :global(.site-header nav a:focus-visible), .market :global(.site-footer a:hover) { color:var(--gold-light); }
+.market :global(.nav-cta) { padding:.58rem .9rem; border:1px solid var(--gold); color:var(--gold-light) !important; }
+.market :global(.section-shell) { width:min(1180px,calc(100% - 48px)); margin-inline:auto; }
+.market :global(.hero) { min-height:calc(100vh - 76px); display:grid; grid-template-columns:1.12fr .88fr; gap:5rem; align-items:center; padding-block:7rem; }
+.market :global(.eyebrow) { margin:0 0 1rem; color:var(--gold); font-size:.76rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase; }
+.market :global(h1), .market :global(h2), .market :global(h3), .market :global(p) { margin-top:0; }
+.market :global(h1), .market :global(h2) { font-family:Georgia,"Times New Roman",serif; font-weight:500; line-height:1.03; letter-spacing:-.035em; }
+.market :global(h1) { max-width:760px; margin-bottom:1.6rem; font-size:clamp(3.7rem,7.5vw,7.4rem); }
+.market :global(h1 em) { display:block; color:var(--gold-light); font-weight:400; }
+.market :global(h2) { margin-bottom:1.2rem; font-size:clamp(2.5rem,5vw,5rem); }
+.market :global(h3) { line-height:1.2; }
+.market :global(.hero-lede), .market :global(.section-heading>p:last-child) { max-width:650px; color:#c5c1b8; font-size:clamp(1rem,1.6vw,1.24rem); }
+.market :global(.hero-actions) { display:flex; align-items:center; flex-wrap:wrap; gap:1.4rem; margin-top:2rem; }
+.market :global(.button) { display:inline-flex; min-height:50px; align-items:center; justify-content:center; padding:.8rem 1.25rem; border:1px solid transparent; font-weight:800; letter-spacing:.01em; transition:transform .2s,background .2s; }
+.market :global(.button:hover) { transform:translateY(-2px); }
+.market :global(.button-gold) { background:var(--gold); color:#090909; }
+.market :global(.button-gold:hover) { background:var(--gold-light); }
+.market :global(.button-outline) { border-color:#817457; color:var(--gold-light); }
+.market :global(.button-outline:hover) { border-color:var(--gold-light); }
+.market :global(.text-link) { padding-block:.6rem; border-bottom:1px solid #665c46; color:#e6e0d4; font-weight:700; }
+.market :global(.trust-row) { display:flex; flex-wrap:wrap; gap:1.4rem; margin-top:2.6rem; color:#8f8b82; font-size:.78rem; text-transform:uppercase; letter-spacing:.09em; }
+.market :global(.trust-row span::before) { content:""; display:inline-block; width:5px; height:5px; margin:0 .55rem .12rem 0; border-radius:50%; background:var(--gold); }
+.market :global(.hero-panel) { position:relative; min-height:580px; padding:2rem; overflow:hidden; border:1px solid #3a3428; background:radial-gradient(circle at 70% 24%,#5d4619 0,transparent 27%),linear-gradient(145deg,#1d1a14,#090909 62%); box-shadow:0 30px 90px rgba(0,0,0,.5); }
+.market :global(.hero-panel::after) { content:""; position:absolute; inset:10%; border:1px solid rgba(215,173,82,.2); border-radius:50%; }
+.market :global(.panel-kicker) { color:#aaa18d; font-size:.65rem; letter-spacing:.2em; }
+.market :global(.panel-number) { position:relative; z-index:1; margin-top:5rem; color:var(--gold-light); font:500 clamp(10rem,20vw,16rem)/.75 Georgia,serif; letter-spacing:-.12em; }
+.market :global(.panel-unit) { position:relative; z-index:1; margin-left:1rem; color:var(--gold); letter-spacing:.45em; }
+.market :global(.hero-panel p) { position:absolute; left:2rem; bottom:1.8rem; color:#aea89d; }
+.market :global(.signal-lines) { position:absolute; right:2rem; bottom:5rem; display:flex; gap:5px; align-items:end; height:70px; }
+.market :global(.signal-lines i) { width:5px; background:var(--gold); opacity:.7; }
+.market :global(.signal-lines i:nth-child(1)) { height:25% } .market :global(.signal-lines i:nth-child(2)) { height:70% } .market :global(.signal-lines i:nth-child(3)) { height:45% } .market :global(.signal-lines i:nth-child(4)) { height:95% }
+.market :global(.demo-section), .market :global(.pricing-section), .market :global(.process-section), .market :global(.faq-section) { padding-block:8rem; }
+.market :global(.section-heading) { margin-bottom:3.5rem; }
+.market :global(.section-heading.centered) { margin-inline:auto; text-align:center; }
+.market :global(.section-heading.centered>p:last-child) { margin-inline:auto; }
+.market :global(.demo-grid) { display:grid; grid-template-columns:minmax(300px,.75fr) 1.25fr; gap:4rem; align-items:center; }
+.market :global(.video-frame) { width:min(100%,420px); padding:10px; border:1px solid #4b412e; background:#111; box-shadow:0 25px 80px rgba(0,0,0,.55); }
+.market :global(.video-frame video) { display:block; width:100%; aspect-ratio:9/16; background:#000; }
+.market :global(.outcome-stack) { border-top:1px solid var(--line); }
+.market :global(.outcome) { display:grid; grid-template-columns:56px 1fr; gap:1rem; padding:1.55rem 0; border-bottom:1px solid var(--line); }
+.market :global(.outcome>span), .market :global(.process-grid>li>span) { color:var(--gold); font:italic 1rem Georgia,serif; }
+.market :global(.outcome h3) { margin-bottom:.3rem; font-size:1.25rem; }
+.market :global(.outcome p), .market :global(.process-grid p), .market :global(.offer-card p), .market :global(.faq-list p), .market :global(.enterprise-section p), .market :global(.site-footer p) { margin-bottom:0; color:var(--muted); }
+.market :global(.pricing-section) { border-top:1px solid var(--line); }
+.market :global(.offers) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.4rem; max-width:970px; margin:auto; }
+.market :global(.offer-card) { position:relative; padding:2.4rem; border:1px solid var(--line); background:#0c0c0b; }
+.market :global(.offer-card-featured) { border-color:var(--gold); background:linear-gradient(145deg,#211a0e,#0d0d0c 65%); }
+.market :global(.offer-badge) { position:absolute; right:1.25rem; top:1.25rem; padding:.25rem .55rem; background:var(--gold); color:#080808; font-size:.68rem; font-weight:900; text-transform:uppercase; letter-spacing:.1em; }
+.market :global(.offer-card h3) { max-width:330px; margin-bottom:1.4rem; font:500 2rem/1.05 Georgia,serif; }
+.market :global(.price) { display:flex; align-items:start; margin-bottom:1rem; color:var(--gold-light); font:500 4.5rem/.9 Georgia,serif; }
+.market :global(.price>span) { margin:.25rem .2rem 0 0; font-size:1.6rem; }
+.market :global(.price small) { align-self:end; margin:0 0 .25rem .6rem; color:#8d8678; font:700 .66rem/1 system-ui,sans-serif; letter-spacing:.15em; }
+.market :global(.check-list), .market :global(.trust-list) { padding:0; margin:1.7rem 0; list-style:none; }
+.market :global(.check-list li), .market :global(.trust-list li) { padding:.55rem 0; color:#d3cec3; border-bottom:1px solid #24231f; }
+.market :global(.check-list li::before), .market :global(.trust-list li::before) { content:"✓"; margin-right:.65rem; color:var(--gold); }
+.market :global(.offer-card .button) { width:100%; margin-top:.8rem; }
+.market :global(.process-grid) { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; padding:0; background:var(--line); list-style:none; border:1px solid var(--line); }
+.market :global(.process-grid li) { min-height:270px; padding:1.5rem; background:var(--ink); }
+.market :global(.process-grid h3) { margin-top:3rem; font-size:1.2rem; }
+.market :global(.trust-section) { padding-block:6rem; background:var(--paper); color:#111; }
+.market :global(.trust-grid) { display:grid; grid-template-columns:1.1fr .9fr; gap:5rem; align-items:center; }
+.market :global(.trust-section h2) { max-width:670px; }
+.market :global(.trust-list li) { color:#393630; border-color:#d8d0c1; }
+.market :global(.faq-section) { display:grid; grid-template-columns:.8fr 1.2fr; gap:5rem; }
+.market :global(.faq-list) { border-top:1px solid var(--line); }
+.market :global(.faq-list details) { border-bottom:1px solid var(--line); padding:1.2rem 0; }
+.market :global(.faq-list summary) { cursor:pointer; font-size:1.05rem; font-weight:750; }
+.market :global(.faq-list p) { padding:.8rem 2rem 0 0; }
+.market :global(.enterprise-section) { display:flex; align-items:end; justify-content:space-between; gap:3rem; padding-block:5rem; border-block:1px solid var(--line); }
+.market :global(.enterprise-section>div) { max-width:720px; }
+.market :global(.enterprise-section h2) { font-size:clamp(2.2rem,4vw,4rem); }
+.market :global(.final-cta) { padding-block:9rem; text-align:center; }
+.market :global(.final-cta h2) { max-width:850px; margin-inline:auto; }
+.market :global(.final-cta .hero-actions) { justify-content:center; }
+.market :global(.site-footer) { display:grid; grid-template-columns:1fr auto; gap:2rem; width:min(1180px,calc(100% - 48px)); margin:auto; padding:3rem 0; border-top:1px solid var(--line); }
+.market :global(.site-footer>div:nth-child(2)) { display:flex; gap:1.5rem; align-items:start; color:#bcb6aa; }
+.market :global(.site-footer>p) { grid-column:1/-1; padding-top:2rem; border-top:1px solid #1f1e1b; font-size:.78rem; }
+.market :global(.site-footer .brand+p) { max-width:420px; margin-top:1rem; }
+.market :global(:focus-visible) { outline:3px solid var(--gold-light); outline-offset:4px; }
+
+.market :global(.form-page) { padding-block:clamp(3rem,7vw,7rem); max-width:980px; }
+.market :global(.intake-form) { display:grid; gap:1.4rem; }
+.market :global(.form-intro) { padding:clamp(1.5rem,4vw,3rem); border:1px solid rgba(215,173,82,.45); background:radial-gradient(circle at 90% 0%,rgba(211,168,83,.14),transparent 35%),#0c0b09; }
+.market :global(.form-intro h1), .market :global(.success-panel h1) { margin:.4rem 0 .75rem; max-width:17ch; font-size:clamp(2rem,5vw,4.5rem); line-height:.98; }
+.market :global(.form-intro strong) { color:var(--gold); }
+.market :global(.intake-form fieldset) { min-width:0; margin:0; padding:clamp(1.2rem,3vw,2rem); border:1px solid var(--line); background:rgba(255,255,255,.025); }
+.market :global(.intake-form legend) { padding:0 .55rem; color:var(--gold); font-size:.78rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+.market :global(.field-grid) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+.market :global(.field) { display:grid; align-content:start; gap:.45rem; color:var(--ink); font-weight:650; }
+.market :global(.field-wide) { grid-column:1/-1; }
+.market :global(.field input), .market :global(.field textarea) { width:100%; border:1px solid #454545; border-radius:.25rem; background:#0b0b0b; color:var(--ink); padding:.9rem 1rem; font:inherit; font-weight:400; }
+.market :global(.field input:focus), .market :global(.field textarea:focus) { outline:2px solid var(--gold); outline-offset:2px; border-color:var(--gold); }
+.market :global(.field [aria-invalid="true"]) { border-color:#e88870; }
+.market :global(.field small), .market :global(.field-error), .market :global(.form-error) { color:#ffad99; font-weight:600; }
+.market :global(.choice-row) { display:flex; flex-wrap:wrap; gap:.7rem; margin:.8rem 0 1.2rem; }
+.market :global(.choice), .market :global(.confirmations label) { display:flex; gap:.65rem; align-items:flex-start; padding:.75rem .9rem; border:1px solid var(--line); background:#0b0b0b; color:var(--muted); }
+.market :global(.choice input), .market :global(.confirmations input) { accent-color:var(--gold); margin-top:.15rem; }
+.market :global(.confirmations) { display:grid; gap:.7rem; }
+.market :global(.submit-button) { justify-self:start; border:0; cursor:pointer; font:inherit; }
+.market :global(.submit-button:disabled) { cursor:wait; opacity:.65; }
+.market :global(.success-panel) { padding:clamp(2rem,7vw,5rem); border:1px solid rgba(215,173,82,.45); background:#0c0b09; }
+.market :global(.success-panel p) { max-width:64ch; color:var(--muted); }
+.market :global(.success-panel h2) { margin-top:2rem; font-size:1.3rem; color:var(--gold); }
+.market :global(.success-panel a) { color:var(--gold-light); }
+
+@media (max-width:820px) {
+  .market :global(.site-header nav a:not(.nav-cta)) { display:none }
+  .market :global(.hero) { grid-template-columns:1fr; padding-block:4rem }
+  .market :global(.hero-panel) { min-height:410px }
+  .market :global(.demo-grid), .market :global(.trust-grid), .market :global(.faq-section) { grid-template-columns:1fr }
+  .market :global(.offers) { grid-template-columns:1fr }
+  .market :global(.process-grid) { grid-template-columns:repeat(2,1fr) }
+  .market :global(.enterprise-section) { align-items:start; flex-direction:column }
+  .market :global(.site-footer) { grid-template-columns:1fr }
+  .market :global(.site-footer>div:nth-child(2)) { flex-wrap:wrap }
+  .market :global(.hero) { gap:3rem }
+}
+
+@media (max-width:720px) {
+  .market :global(.field-grid) { grid-template-columns:1fr }
+  .market :global(.field-wide) { grid-column:auto }
+  .market :global(.submit-button) { width:100% }
+}
+
+@media (max-width:520px) {
+  .market :global(.section-shell), .market :global(.site-footer) { width:min(100% - 32px,1180px) }
+  .market :global(.site-header) { padding-inline:16px }
+  .market :global(.hero) { padding-block:3.5rem }
+  .market :global(h1) { font-size:3.25rem }
+  .market :global(.hero-panel) { min-height:340px }
+  .market :global(.panel-number) { font-size:10rem }
+  .market :global(.demo-section), .market :global(.pricing-section), .market :global(.process-section), .market :global(.faq-section) { padding-block:5rem }
+  .market :global(.process-grid) { grid-template-columns:1fr }
+  .market :global(.process-grid li) { min-height:auto }
+  .market :global(.offer-card) { padding:1.5rem }
+  .market :global(.trust-row) { gap:.7rem }
+  .market :global(.site-footer>div:nth-child(2)) { flex-direction:column; gap:.5rem }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .market :global(.button) { transition:none }
+}

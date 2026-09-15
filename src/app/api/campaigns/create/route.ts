@@ -12,6 +12,9 @@ export async function POST(req: NextRequest) {
     }
     const data = parsed.data;
 
+    const pack = (body.pack === "single" ? "single" : "four") as "single" | "four";
+    const price = pack === "single" ? 199 : 550;
+
     const job = await prisma.job.create({
       data: {
         businessUrl: data.business_url,
@@ -20,6 +23,8 @@ export async function POST(req: NextRequest) {
         targetCustomer: data.target_customer,
         primaryService: data.primary_service,
         offer: data.offer,
+        pack,
+        price,
         outputFormats: data.output_formats,
         assetPermissionConfirmed: data.asset_permission_confirmed,
         instagramUrl: data.instagram_url,

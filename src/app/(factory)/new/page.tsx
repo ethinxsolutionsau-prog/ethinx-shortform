@@ -14,6 +14,11 @@ export default function NewCampaign() {
   const [assets, setAssets] = useState<AssetPreview[]>([]);
   const [dragOver, setDragOver] = useState(false);
 
+  const [packInfo] = useState(() => {
+    const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    return p.get("pack") === "single" ? { pack: "single" as const, label: "Single Video — $199", price: "$199" } : { pack: "four" as const, label: "Four-Pack — $550", price: "$550" };
+  });
+
   const addFiles = useCallback((files: FileList | File[]) => {
     const arr = Array.from(files).slice(0, 6 - assets.length);
     const next: AssetPreview[] = arr.map((f) => ({
@@ -38,6 +43,8 @@ export default function NewCampaign() {
     setLoading(true);
     setError("");
     const fd = new FormData(e.currentTarget);
+    const params = new URLSearchParams(window.location.search);
+    const pack = params.get("pack") === "single" ? "single" : "four";
     const payload: any = {
       business_url: fd.get("business_url"),
       campaign_goal: fd.get("campaign_goal") || "quote_requests",
@@ -50,6 +57,7 @@ export default function NewCampaign() {
       phone: (fd.get("phone") as string) || undefined,
       instagram_url: (fd.get("instagram_url") as string) || undefined,
       facebook_url: (fd.get("facebook_url") as string) || undefined,
+      pack,
     };
     Object.keys(payload).forEach((k) => payload[k] === "" && delete payload[k]);
 
@@ -218,6 +226,11 @@ export default function NewCampaign() {
           </label>
 
           {error && <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">{error}</div>}
+
+          <div className="bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 flex items-center justify-between">
+            <span className="text-xs font-medium text-zinc-600">Selected pack</span>
+            <span className="text-sm font-bold">{packInfo.label}</span>
+          </div>
 
           <button disabled={loading} className="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-zinc-800 disabled:opacity-50 transition">
             {loading ? "Creating..." : "Create Campaign"}

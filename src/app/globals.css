@@ -6,6 +6,13 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --ink: #080808;
+  --panel: #11110f;
+  --line: #2b2923;
+  --gold: #d7ad52;
+  --gold-light: #f2d58e;
+  --paper: #f5f1e8;
+  --muted: #aaa69d;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -16,6 +23,10 @@
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
@@ -24,6 +35,12 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 @layer utilities {

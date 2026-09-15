@@ -43,6 +43,8 @@ model Job {
   targetCustomer            String
   primaryService            String
   offer                     String
+  pack                      String   @default("four")
+  price                     Int      @default(550)
   outputFormats             String[] @default(["9:16"])
   assetPermissionConfirmed  Boolean  @default(false)
 
@@ -170,4 +172,17 @@ model Template {
   scenes          Int      @default(5)
   config          Json     // full template definition
   createdAt       DateTime @default(now())
+}
+
+model EnterpriseInquiry {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  businessName String
+  contactName  String
+  email        String
+  phone        String
+  website      String
+  status       String   @default("NEW")
+  details      Json
+  alerts       Json?
 }
