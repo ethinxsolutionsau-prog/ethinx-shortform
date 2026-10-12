@@ -129,6 +129,8 @@ async function main() {
       await createDelivery(job.id);
       throw new Error("Should not deliver escalated");
     } catch (e: any) {
+      if (e.message === "Should not deliver escalated") throw e;
+      if (!e.message.startsWith("Delivery blocked:")) throw e;
       console.log(`Delivery blocked as expected: ${e.message}`);
     }
   }
@@ -141,6 +143,8 @@ async function main() {
       await createDelivery(job.id);
       throw new Error("Delivery should be blocked before approval");
     } catch (e: any) {
+      if (e.message === "Delivery should be blocked before approval") throw e;
+      if (!e.message.startsWith("Delivery blocked:")) throw e;
       console.log(`Blocked as expected: ${e.message}`);
     }
     // Approve
