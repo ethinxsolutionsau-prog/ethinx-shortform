@@ -24,6 +24,18 @@ export async function createDelivery(jobId: string): Promise<{ zipPath: string; 
     throw new Error(`Delivery blocked: job not release eligible. state=${job.state} releaseEligible=${job.releaseEligible}. Need human approval.`);
   }
 
+  // Verify the complete four-pack before producing any deliverable.
+  const requiredAngles = ["PROBLEM", "PROOF", "OFFER", "DIRECT"];
+  if (job.videos.length !== requiredAngles.length ||
+      requiredAngles.some(angle => job.videos.filter(v => v.angle === angle).length !== 1)) {
+    throw new Error("Delivery blocked: exactly four distinct video angles are required.");
+  }
+  for (const video of job.videos) {
+    if (!video.filePath || !fs.existsSync(video.filePath) || fs.statSync(video.filePath).size === 0) {
+      throw new Error(`Delivery blocked: missing or empty MP4 for ${video.angle}`);
+    }
+  }
+
   const business = (job.brief as any)?.business?.name || job.businessUrl.replace(/^https?:\/\//, "").replace(/[^a-z0-9]/gi, "_");
   const safeName = business.replace(/[^a-z0-9]/gi, "_").toLowerCase();
   const outDir = path.join(DELIVERY_ROOT, jobId);
