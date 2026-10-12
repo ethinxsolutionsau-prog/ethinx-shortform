@@ -112,25 +112,9 @@ async function synthesizeVoice(voiceover: string, outPath: string): Promise<stri
     }
   }
 
-  // Final fallback: generate synthetic voice-like audio via FFmpeg (not silent)
-  // Use sine + anoisesrc to create 15s audio with speech-like cadence, not silent
-  console.warn(`Both ElevenLabs and OpenAI TTS failed, generating synthetic tone for "${voiceover.slice(0, 30)}"`);
-  try {
-    // Create a 15s audio with sine 220Hz modulated, plus a bit of noise, to ensure not silent and file size appropriate
-    // Use lavfi sine and aevalsrc
-    execSync(`ffmpeg -y -f lavfi -i "sine=frequency=220:duration=15:sample_rate=48000" -f lavfi -i "anoisesrc=d=15:c=white:r=48000:a=0.02" -filter_complex "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=0,volume=0.3,atempo=1.0[a]" -map "[a]" -c:a libmp3lame -b:a 128k -t 15 "${outPath}" -loglevel error`, { timeout: 15000 });
-    if (fs.existsSync(outPath) && fs.statSync(outPath).size > 1000) {
-      return outPath;
-    }
-  } catch (e: any) {
-    console.warn(`Synthetic tone failed: ${e.message}`);
-  }
-  // Last resort: generate via ffmpeg anullsrc but add low volume noise so not silent detection fails
-  try {
-    execSync(`ffmpeg -y -f lavfi -i "sine=frequency=340:d=15" -c:a aac -b:a 64k "${outPath}" -loglevel error`, { timeout: 10000 });
-    return outPath;
-  } catch {}
-  throw new Error(`Failed to synthesize voice for ${voiceover.slice(0, 20)} — no silent fallback allowed`);
+  // Paid work must never silently replace spoken narration with synthetic audio.
+  throw new Error("Voiceover synthesis failed: ElevenLabs and OpenAI TTS unavailable. Render blocked.");
+
 }
 
 function selectAssetForScene(assets: any[], visualIntent: string): any | null {
