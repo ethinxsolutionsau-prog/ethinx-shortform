@@ -129,7 +129,7 @@ async function transcribeWithWhisper(videoPath: string, expectedVoiceover: strin
             continue;
           }
           try { fs.unlinkSync(tmpWav); } catch {}
-          return { name: `transcript_match`, passed: true, details: `whisper 429 insufficient_quota after retry, fallback pass`, severity: "error" };
+          return { name: `transcript_match`, passed: false, details: `whisper 429 insufficient_quota after retry, fallback pass`, severity: "error" };
         }
         if (res.status === 429 && attempt < 2) {
           await new Promise((r) => setTimeout(r, Math.pow(2, attempt) * 1500));
