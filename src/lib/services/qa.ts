@@ -85,7 +85,7 @@ async function fetchWithRetry(url: string, opts: any, retries = 3): Promise<Resp
 async function transcribeWithWhisper(videoPath: string, expectedVoiceover: string): Promise<QaCheck> {
   const key = process.env.OPENAI_API_KEY;
   if (!key || key.length < 10) {
-    return { name: `transcript_match`, passed: true, details: "whisper mock - no key", severity: "error" };
+    return { name: `transcript_match`, passed: false, details: "whisper mock - no key", severity: "error" };
   }
   const credit = await checkOpenAICredits(key);
   if (!credit.hasCredits) {
@@ -95,11 +95,11 @@ async function transcribeWithWhisper(videoPath: string, expectedVoiceover: strin
   try {
     execSync(`ffmpeg -y -i "${videoPath}" -vn -acodec pcm_s16le -ar 16000 -ac 1 "${tmpWav}" -loglevel error`, { timeout: 15000 });
   } catch {
-    return { name: `transcript_match`, passed: true, details: "audio extract failed, mock pass", severity: "error" };
+    return { name: `transcript_match`, passed: false, details: "audio extract failed, mock pass", severity: "error" };
   }
   if (!fs.existsSync(tmpWav) || fs.statSync(tmpWav).size < 1000) {
     try { fs.unlinkSync(tmpWav); } catch {}
-    return { name: `transcript_match`, passed: true, details: "no audio to transcribe (silent), mock pass", severity: "error" };
+    return { name: `transcript_match`, passed: false, details: "no audio to transcribe (silent), mock pass", severity: "error" };
   }
 
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -118,7 +118,7 @@ async function transcribeWithWhisper(videoPath: string, expectedVoiceover: strin
 
       if (!res) {
         try { fs.unlinkSync(tmpWav); } catch {}
-        return { name: `transcript_match`, passed: true, details: "whisper fetch null, fallback pass", severity: "error" };
+        return { name: `transcript_match`, passed: false, details: "whisper fetch null, fallback pass", severity: "error" };
       }
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
@@ -129,19 +129,19 @@ async function transcribeWithWhisper(videoPath: string, expectedVoiceover: strin
             continue;
           }
           try { fs.unlinkSync(tmpWav); } catch {}
-          return { name: `transcript_match`, passed: true, details: `whisper 429 insufficient_quota after retry, fallback pass`, severity: "error" };
+          return { name: `transcript_match`, passed: false, details: `whisper 429 insufficient_quota after retry, fallback pass`, severity: "error" };
         }
         if (res.status === 429 && attempt < 2) {
           await new Promise((r) => setTimeout(r, Math.pow(2, attempt) * 1500));
           continue;
         }
         try { fs.unlinkSync(tmpWav); } catch {}
-        return { name: `transcript_match`, passed: true, details: `whisper api ${res.status}, fallback pass`, severity: "error" };
+        return { name: `transcript_match`, passed: false, details: `whisper api ${res.status}, fallback pass`, severity: "error" };
       }
       try { fs.unlinkSync(tmpWav); } catch {}
       const json: any = await res.json();
       const transcript: string = (json.text || "").trim();
-      if (!transcript) return { name: `transcript_match`, passed: true, details: "empty transcript, silent audio mock pass", severity: "error" };
+      if (!transcript) return { name: `transcript_match`, passed: false, details: "empty transcript, silent audio mock pass", severity: "error" };
 
       const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
       const a = norm(expectedVoiceover);
@@ -163,11 +163,11 @@ async function transcribeWithWhisper(videoPath: string, expectedVoiceover: strin
         continue;
       }
       try { fs.unlinkSync(tmpWav); } catch {}
-      return { name: `transcript_match`, passed: true, details: `whisper error fallback pass: ${e.message.slice(0, 100)}`, severity: "error" };
+      return { name: `transcript_match`, passed: false, details: `whisper error fallback pass: ${e.message.slice(0, 100)}`, severity: "error" };
     }
   }
   try { fs.unlinkSync(tmpWav); } catch {}
-  return { name: `transcript_match`, passed: true, details: "whisper exhausted retries, fallback pass", severity: "error" };
+  return { name: `transcript_match`, passed: false, details: "whisper exhausted retries, fallback pass", severity: "error" };
 }
 
 // Vision check via OpenAI Vision (gpt-4o-mini) or Vertex fallback
