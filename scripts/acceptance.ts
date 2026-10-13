@@ -150,12 +150,8 @@ async function main() {
     // Approve
     await prisma.job.update({ where: { id: job.id }, data: { state: "APPROVED", releaseEligible: true, approvedAt: new Date(), approvedBy: "test-human" } });
     console.log("Approved -> release_eligible=true");
-  } else if (afterQaFinal?.state === "ESCALATED") {
-    // For test, force approve path by fixing escalated? Create new job for happy path
-    console.log("Escalated path tested, now creating happy-path job for delivery");
-    // We'll reuse but force to HUMAN_REVIEW for delivery test
-    await prisma.job.update({ where: { id: job.id }, data: { state: "HUMAN_REVIEW" } });
-    await prisma.job.update({ where: { id: job.id }, data: { state: "APPROVED", releaseEligible: true, approvedAt: new Date() } });
+  } else {
+    throw new Error(`Acceptance cannot deliver: QA ended in ${afterQaFinal?.state}; no approval bypass allowed`);
   }
 
   // 9. Delivery
