@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 import archiver from "archiver";
+import { execFileSync } from "child_process";
 
 const RENDER_ROOT = path.join(process.cwd(), "renders");
 const DELIVERY_ROOT = path.join(process.cwd(), "delivery");
@@ -24,6 +25,38 @@ export async function createDelivery(jobId: string): Promise<{ zipPath: string; 
     throw new Error(`Delivery blocked: job not release eligible. state=${job.state} releaseEligible=${job.releaseEligible}. Need human approval.`);
   }
 
+  // Assert that all four real, distinct MP4s are present and decodable before packaging.
+  // These checks run against the actual files, not persisted success flags.
+  const requiredAngles = ["PROBLEM", "PROOF", "OFFER", "DIRECT"];
+  if (job.pack !== "four" || job.videos.length !== 4 ||
+      !requiredAngles.every(angle => job.videos.some(v => v.angle === angle))) {
+    throw new Error("Four-pack requires one video for each of PROBLEM, PROOF, OFFER and DIRECT");
+  }
+  if (!job.assetPermissionConfirmed) throw new Error("Client asset permission not confirmed");
+  for (const video of job.videos) {
+    if (!video.filePath || !fs.existsSync(video.filePath)) throw new Error(`Missing MP4 for ${video.angle}`);
+    let probe: any;
+    try {
+      probe = JSON.parse(execFileSync("ffprobe",
+        ["-v", "error", "-show_format", "-show_streams", "-of", "json", video.filePath],
+        { encoding: "utf8", timeout: 20000 }));
+    } catch { throw new Error(`Unprobeable MP4 for ${video.angle}`); }
+    const streams = probe.streams || [];
+    const v = streams.find((s: any) => s.codec_type === "video");
+    const a = streams.find((s: any) => s.codec_type === "audio");
+    const duration = Number(probe.format?.duration);
+    if (!v || !a || v.codec_name !== "h264" || a.codec_name !== "aac" ||
+        v.width !== 1080 || v.height !== 1920 || v.pix_fmt !== "yuv420p" ||
+        !Number.isFinite(duration) || duration < 14.5 || duration > 15.5) {
+      throw new Error(`Invalid MP4 format, streams or duration for ${video.angle}`);
+    }
+    try {
+      execFileSync("ffmpeg",
+        ["-v", "error", "-xerror", "-i", video.filePath, "-map", "0:v:0", "-map", "0:a:0", "-f", "null", "-"],
+        { stdio: ["ignore", "pipe", "pipe"], timeout: 180000 });
+    } catch { throw new Error(`MP4 fails full decode for ${video.angle}`); }
+  }
+
   const business = (job.brief as any)?.business?.name || job.businessUrl.replace(/^https?:\/\//, "").replace(/[^a-z0-9]/gi, "_");
   const safeName = business.replace(/[^a-z0-9]/gi, "_").toLowerCase();
   const outDir = path.join(DELIVERY_ROOT, jobId);
@@ -41,11 +74,9 @@ export async function createDelivery(jobId: string): Promise<{ zipPath: string; 
     const src = v.filePath!;
     const destName = mapping[v.angle] || `${v.angle.toLowerCase()}.mp4`;
     const dest = path.join(packageDir, destName);
-    if (fs.existsSync(src)) {
-      fs.copyFileSync(src, dest);
-      const hash = crypto.createHash("sha256").update(fs.readFileSync(dest)).digest("hex");
-      checksums[destName] = hash;
-    }
+    fs.copyFileSync(src, dest);
+    const hash = crypto.createHash("sha256").update(fs.readFileSync(dest)).digest("hex");
+    checksums[destName] = hash;
     // thumbnail
     if (v.thumbnailPath && fs.existsSync(v.thumbnailPath)) {
       const thumbDest = path.join(packageDir, "thumbnails", destName.replace(".mp4", ".jpg"));
@@ -115,6 +146,7 @@ export async function createDelivery(jobId: string): Promise<{ zipPath: string; 
     archive.finalize();
   });
 
+  if (Object.keys(checksums).length !== 4 || fs.statSync(zipPath).size === 0) throw new Error("Incomplete delivery ZIP");
   await prisma.job.update({ where: { id: jobId }, data: { state: "DELIVERED" } });
   await logAudit(jobId, "delivery:created", { fromState: "APPROVED", toState: "DELIVERED", payload: { zipPath, checksums } });
 
