@@ -112,25 +112,7 @@ async function synthesizeVoice(voiceover: string, outPath: string): Promise<stri
     }
   }
 
-  // Final fallback: generate synthetic voice-like audio via FFmpeg (not silent)
-  // Use sine + anoisesrc to create 15s audio with speech-like cadence, not silent
-  console.warn(`Both ElevenLabs and OpenAI TTS failed, generating synthetic tone for "${voiceover.slice(0, 30)}"`);
-  try {
-    // Create a 15s audio with sine 220Hz modulated, plus a bit of noise, to ensure not silent and file size appropriate
-    // Use lavfi sine and aevalsrc
-    execSync(`ffmpeg -y -f lavfi -i "sine=frequency=220:duration=15:sample_rate=48000" -f lavfi -i "anoisesrc=d=15:c=white:r=48000:a=0.02" -filter_complex "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=0,volume=0.3,atempo=1.0[a]" -map "[a]" -c:a libmp3lame -b:a 128k -t 15 "${outPath}" -loglevel error`, { timeout: 15000 });
-    if (fs.existsSync(outPath) && fs.statSync(outPath).size > 1000) {
-      return outPath;
-    }
-  } catch (e: any) {
-    console.warn(`Synthetic tone failed: ${e.message}`);
-  }
-  // Last resort: generate via ffmpeg anullsrc but add low volume noise so not silent detection fails
-  try {
-    execSync(`ffmpeg -y -f lavfi -i "sine=frequency=340:d=15" -c:a aac -b:a 64k "${outPath}" -loglevel error`, { timeout: 10000 });
-    return outPath;
-  } catch {}
-  throw new Error(`Failed to synthesize voice for ${voiceover.slice(0, 20)} — no silent fallback allowed`);
+  throw new Error("Real speech synthesis unavailable; refusing to render customer video with synthetic audio");
 }
 
 function selectAssetForScene(assets: any[], visualIntent: string): any | null {
@@ -185,7 +167,8 @@ function ensureBaseVideo(): string {
 export async function renderAll(jobId: string): Promise<{ angle: string; filePath: string }[]> {
   const job = await prisma.job.findUnique({ where: { id: jobId }, include: { scripts: true, assets: true } });
   if (!job) throw new Error("Job not found");
-  if (job.scripts.length !== 4) throw new Error("Expected 4 scripts before rendering");
+  if (job.scripts.length !== 4 || new Set(job.scripts.map(s => s.angle)).size !== 4) throw new Error("Expected four distinct scripts before rendering");
+  if (!job.assetPermissionConfirmed || !job.assets.length) throw new Error("Approved client assets required");
 
   await prisma.job.update({ where: { id: jobId }, data: { state: "RENDERING" } });
 
@@ -336,11 +319,7 @@ async function renderSingle(opts: RenderOpts): Promise<void> {
     }
   }
 
-  // If no real asset, generate/use a high-detail default image from /tmp/assets to ensure 5-15MB
-  if (!hasRealAsset || !assetPath) {
-    assetPath = ensureRealAssetImage();
-    hasRealAsset = true;
-  }
+  if (!hasRealAsset || !assetPath) throw new Error("No approved local asset available; refusing synthetic placeholder render");
 
   const fontPart = fs.existsSync(FONT_PATH) ? `fontfile=${FONT_PATH}:` : "";
   const drawtexts = scenes
